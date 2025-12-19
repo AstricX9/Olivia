@@ -1,0 +1,18 @@
+﻿
+Checking for update
+[View] Created 6 for http://localhost:4444/newtab.html
+[View] 6 started loading
+[ViewManager] Created view 6 for http://localhost:4444/newtab.html
+[View] 6 finished loading
+[View] 6 started loading
+Update for version 6.0.0-nightly.2 is not available (latest version: 5.2.0, downgrade is disallowed).
+[View] Created 7 for http://localhost:4444/newtab.html
+[View] 7 started loading
+[ViewManager] Created view 7 for http://localhost:4444/newtab.html
+[View] 7 finished loading
+[View] 7 started loading
+[View] Created 8 for http://localhost:4444/settings.html
+[View] 8 started loading
+[ViewManager] Created view 8 for http://localhost:4444/settings.html
+[View] 8 finished loading
+[View] 8 started loading

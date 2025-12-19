@@ -3,7 +3,8 @@ import { observable, computed, makeObservable, makeAutoObservable } from 'mobx';
 import { TabsStore } from './tabs';
 import { TabGroupsStore } from './tab-groups';
 import { AddTabStore } from './add-tab';
-import { ipcRenderer, remote } from 'electron';
+import { ipcRenderer } from 'electron';
+import * as remote from '@electron/remote';
 import { ExtensionsStore } from './extensions';
 import { SettingsStore } from './settings';
 import { getCurrentWindow } from '../utils/windows';
@@ -19,7 +20,7 @@ import { BookmarkBarStore } from './bookmark-bar';
 export class Store {
   public settings = new SettingsStore(this);
   public addTab = new AddTabStore();
-  public tabs = new TabsStore();
+  public tabs = new TabsStore(this);
   public extensions = new ExtensionsStore();
   public startupTabs = new StartupTabsStore(this);
   public tabGroups = new TabGroupsStore(this);
@@ -35,7 +36,7 @@ export class Store {
     y: 0,
   };
 
-  public windowId = getCurrentWindow().id;
+  public windowId = ipcRenderer.sendSync('get-window-id');
 
   public barHideTimer = 0;
 
@@ -172,6 +173,10 @@ export class Store {
   }
 
   public constructor() {
+    ipcRenderer.send('renderer-log', 'Store initialized', {
+      windowId: this.windowId,
+      remoteId: remote.getCurrentWindow().id,
+    });
     makeObservable(this, {
       addressbarTextVisible: observable,
       addressbarFocused: observable,

@@ -1,5 +1,5 @@
 import { AppWindow } from './windows/app';
-import { extensions } from 'electron-extensions';
+// import { extensions } from 'electron-extensions';
 import { BrowserWindow, ipcMain } from 'electron';
 
 export class WindowsService {
@@ -11,6 +11,7 @@ export class WindowsService {
 
   constructor() {
     if (process.env.ENABLE_EXTENSIONS) {
+/*
       extensions.tabs.on('activated', (tabId, windowId, focus) => {
         const win = this.list.find((x) => x.id === windowId);
         win.viewManager.select(tabId, focus === undefined ? true : focus);
@@ -34,6 +35,7 @@ export class WindowsService {
         const view = win.viewManager.create(details);
         return view.id;
       };
+*/
     }
 
     ipcMain.handle('get-tab-zoom', (e, tabId) => {
@@ -47,7 +49,7 @@ export class WindowsService {
     this.list.push(window);
 
     if (process.env.ENABLE_EXTENSIONS) {
-      extensions.windows.observe(window.win);
+      // extensions.windows.observe(window.win);
     }
 
     window.win.on('focus', () => {

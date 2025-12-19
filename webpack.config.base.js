@@ -88,6 +88,9 @@ const config = {
     alias: {
       '~': INCLUDE,
     },
+    fallback: {
+      url: require.resolve('url/'),
+    },
     plugins: [new TsconfigPathsPlugin()],
   },
 

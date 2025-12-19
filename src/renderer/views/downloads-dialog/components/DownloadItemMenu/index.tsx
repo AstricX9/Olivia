@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { observer } from 'mobx-react-lite';
 import { IDownloadItem } from '~/interfaces';
-import { clipboard, ipcRenderer, remote, shell } from 'electron';
+import { clipboard, ipcRenderer, shell } from 'electron';
+import * as remote from '@electron/remote';
 import {
   ICON_CHECK,
   ICON_PAUSE,

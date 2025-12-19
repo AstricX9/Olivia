@@ -16,13 +16,10 @@ const PORT = 4444;
 const appConfig = getConfig(getBaseConfig('app'), {
   target: 'web',
 
-  devServer: {
-    contentBase: join(__dirname, 'build'),
+    /*
     port: PORT,
     hot: true,
-    inline: true,
-    disableHostCheck: true,
-  },
+    */
 
   plugins: dev
     ? [

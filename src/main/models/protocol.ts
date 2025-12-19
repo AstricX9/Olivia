@@ -46,5 +46,10 @@ export const registerProtocol = (session: Electron.Session) => {
         callback({ path: join(__dirname, parsed.path) });
       },
     );
+  } else {
+    session.protocol.handle(WEBUI_PROTOCOL, (request) => {
+      const parsed = parse(request.url);
+      return Response.redirect(`http://localhost:4444/${parsed.hostname}.html`);
+    });
   }
 };

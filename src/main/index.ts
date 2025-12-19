@@ -13,7 +13,7 @@ import { Application } from './application';
 
 export const isNightly = app.name === 'wexond-nightly';
 
-app.allowRendererProcessReuse = true;
+// app.allowRendererProcessReuse = true;
 app.name = isNightly ? 'Wexond Nightly' : 'Wexond';
 
 (process.env as any)['ELECTRON_DISABLE_SECURITY_WARNINGS'] = true;
@@ -54,18 +54,35 @@ ipcMain.on('get-window-id', (e) => {
   e.returnValue = (e.sender as any).windowId;
 });
 
+ipcMain.on('renderer-log', (e, ...args) => {
+  console.log('[Renderer]', ...args);
+});
+
 ipcMain.handle(
   `web-contents-call`,
   async (e, { webContentsId, method, args = [] }) => {
     const wc = webContents.fromId(webContentsId);
-    const result = (wc as any)[method](...args);
+    if (!wc) {
+      console.error(`WebContents not found for ID: ${webContentsId}`);
+      return;
+    }
 
-    if (result) {
+    if (method === 'loadURL') {
+      console.log(`[IPC] ${webContentsId}.loadURL("${args[0]}")`);
+    }
+
+    try {
+      const result = (wc as any)[method](...args);
+
       if (result instanceof Promise) {
+        result.catch(err => {
+          console.error(`[IPC] ${webContentsId}.${method} promise rejected:`, err);
+        });
         return await result;
       }
-
       return result;
+    } catch (err) {
+      console.error(`[IPC] ${webContentsId}.${method} threw error:`, err);
     }
   },
 );

@@ -22,6 +22,7 @@ const mainConfig = getConfig({
   },
 
   plugins: [
+    /*
     new CopyPlugin({
       patterns: [
         {
@@ -36,6 +37,7 @@ const mainConfig = getConfig({
         },
       ],
     }),
+    */
   ],
 });
 

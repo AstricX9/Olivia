@@ -1,4 +1,5 @@
 import { BrowserWindow, app, dialog } from 'electron';
+
 import { writeFileSync, promises } from 'fs';
 import { resolve, join } from 'path';
 
@@ -30,9 +31,6 @@ export class AppWindow {
         nodeIntegration: true,
         contextIsolation: false,
         javascript: true,
-        // TODO: get rid of the remote module in renderers
-        enableRemoteModule: true,
-        worldSafeExecuteJavaScript: false,
       },
       icon: resolve(
         app.getAppPath(),
@@ -40,6 +38,10 @@ export class AppWindow {
       ),
       show: false,
     });
+
+    require('@electron/remote/main').enable(this.win.webContents);
+
+    (this.webContents as any).windowId = this.win.id;
 
     this.incognito = incognito;
 
@@ -185,11 +187,11 @@ export class AppWindow {
       this.send('html-fullscreen', false);
     });
 
-    this.win.on('scroll-touch-begin', () => {
+    (this.win as any).on('scroll-touch-begin', () => {
       this.send('scroll-touch-begin');
     });
 
-    this.win.on('scroll-touch-end', () => {
+    (this.win as any).on('scroll-touch-end', () => {
       this.viewManager.selected.send('scroll-touch-end');
       this.send('scroll-touch-end');
     });

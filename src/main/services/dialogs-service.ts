@@ -64,11 +64,11 @@ export class DialogsService {
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
-        enableRemoteModule: true,
         webviewTag: true,
-        worldSafeExecuteJavaScript: false,
       },
     });
+
+    require('@electron/remote/main').enable(view.webContents);
 
     view.webContents.loadURL(`about:blank`);
 

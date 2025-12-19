@@ -15,7 +15,8 @@ import {
 import { ICON_VOLUME_HIGH, ICON_VOLUME_OFF } from '~/renderer/constants';
 import { ITab, ITabGroup } from '../../models';
 import store from '../../store';
-import { remote, ipcRenderer, nativeImage, Menu } from 'electron';
+import * as remote from '@electron/remote';
+import { ipcRenderer, nativeImage, Menu } from 'electron';
 import { COMPACT_TAB_MARGIN_TOP } from '~/constants/design';
 
 const removeTab = (tab: ITab) => (e: React.MouseEvent<HTMLDivElement>) => {
@@ -266,7 +267,7 @@ const tabGroupLabel = (tabGroup: ITabGroup): string => {
   return label;
 };
 
-const tabGroupIcon = (color: string): nativeImage => {
+const tabGroupIcon = (color: string): any => {
   var canvas = document.createElement('canvas');
   var context = canvas.getContext('2d');
   canvas.width = canvas.height = 12;

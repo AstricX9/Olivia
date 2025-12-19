@@ -143,6 +143,7 @@ export class ITab {
 
   @action
   public async select() {
+    ipcRenderer.send('renderer-log', `Selecting tab ${this.id} for window ${store.windowId}`);
     if (!this.isClosing) {
       store.tabs.selectedTabId = this.id;
 

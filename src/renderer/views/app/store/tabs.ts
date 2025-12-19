@@ -15,6 +15,7 @@ import {
   TAB_MAX_WIDTH,
 } from '../constants';
 
+import { Store } from '.';
 import store from '.';
 import { ipcRenderer } from 'electron';
 import { defaultTabOptions } from '~/constants/tabs';
@@ -49,6 +50,8 @@ export class TabsStore {
   public containerRef = React.createRef<HTMLDivElement>();
 
   public leftMargins = 0;
+  
+  private store: Store;
 
   public get selectedTab() {
     return this.getTabById(this.selectedTabId);
@@ -58,7 +61,8 @@ export class TabsStore {
     return this.getTabById(this.hoveredTabId);
   }
 
-  public constructor() {
+  public constructor(store: Store) {
+    this.store = store;
     makeObservable(this, {
       list: observable,
       isDragging: observable,
@@ -149,7 +153,7 @@ export class TabsStore {
           const [url] = args;
           tab.url = url;
 
-          if (tab.id === this.selectedTabId && !store.addressbarFocused) {
+          if (tab.id === this.selectedTabId && !this.store.addressbarFocused) {
             this.selectedTab.addressbarValue = null;
           }
         }
@@ -274,12 +278,12 @@ export class TabsStore {
     options = defaultTabOptions,
     tabGroupId: number = undefined,
   ) {
-    ipcRenderer.send(`hide-window-${store.windowId}`);
+    ipcRenderer.send(`hide-window-${this.store.windowId}`);
 
     const opts = { ...defaultTabOptions, ...options };
 
     const id: number = await ipcRenderer.invoke(
-      `view-create-${store.windowId}`,
+      `view-create-${this.store.windowId}`,
       opts,
     );
     return this.createTab(opts, id, tabGroupId);
@@ -287,7 +291,7 @@ export class TabsStore {
 
   @action
   public async addTabs(options: chrome.tabs.CreateProperties[]) {
-    ipcRenderer.send(`hide-window-${store.windowId}`);
+    ipcRenderer.send(`hide-window-${this.store.windowId}`);
 
     for (let i = 0; i < options.length; i++) {
       if (i === options.length - 1) {
@@ -298,7 +302,7 @@ export class TabsStore {
     }
 
     const ids = await ipcRenderer.invoke(
-      `views-create-${store.windowId}`,
+      `views-create-${this.store.windowId}`,
       options,
     );
     return this.createTabs(options, ids);
@@ -311,7 +315,7 @@ export class TabsStore {
   @action
   public pinTab(tab: ITab) {
     tab.isPinned = true;
-    store.startupTabs.updateStartupTabItem(tab);
+    this.store.startupTabs.updateStartupTabItem(tab);
     requestAnimationFrame(() => {
       tab.setLeft(0, false);
       this.getTabsToReplace(tab, 'left');
@@ -322,7 +326,7 @@ export class TabsStore {
   @action
   public unpinTab(tab: ITab) {
     tab.isPinned = false;
-    store.startupTabs.updateStartupTabItem(tab);
+    this.store.startupTabs.updateStartupTabItem(tab);
     requestAnimationFrame(() => {
       tab.setLeft(
         Math.max(
@@ -339,13 +343,13 @@ export class TabsStore {
 
   @action
   public muteTab(tab: ITab) {
-    ipcRenderer.send(`mute-view-${store.windowId}`, tab.id);
+    ipcRenderer.send(`mute-view-${this.store.windowId}`, tab.id);
     tab.isMuted = true;
   }
 
   @action
   public unmuteTab(tab: ITab) {
-    ipcRenderer.send(`unmute-view-${store.windowId}`, tab.id);
+    ipcRenderer.send(`unmute-view-${this.store.windowId}`, tab.id);
     tab.isMuted = false;
   }
 
@@ -441,7 +445,7 @@ export class TabsStore {
   public setTabsLefts(animation: boolean) {
     const tabs = this.list.filter((x) => !x.isClosing);
 
-    const { containerWidth } = store.tabs;
+    const { containerWidth } = this.store.tabs;
 
     let left = 0;
 
@@ -455,7 +459,7 @@ export class TabsStore {
       left += tab.width + TABS_PADDING;
     }
 
-    store.addTab.setLeft(
+    this.store.addTab.setLeft(
       Math.min(left, containerWidth + TABS_PADDING),
       animation,
     );
@@ -597,7 +601,7 @@ export class TabsStore {
 
     if (this.isDragging) {
       const container = this.containerRef;
-      const { tabStartX, mouseStartX, lastMouseX, lastScrollLeft } = store.tabs;
+      const { tabStartX, mouseStartX, lastMouseX, lastScrollLeft } = this.store.tabs;
 
       const boundingRect = container.current.getBoundingClientRect();
 
@@ -605,7 +609,7 @@ export class TabsStore {
         return;
       }
 
-      store.canOpenSearch = false;
+      this.store.canOpenSearch = false;
 
       selectedTab.isDragging = true;
 
@@ -638,7 +642,7 @@ export class TabsStore {
         e.pageY > TOOLBAR_HEIGHT + 16 ||
         e.pageY < -16 ||
         e.pageX < boundingRect.left ||
-        e.pageX - boundingRect.left > store.addTab.left
+        e.pageX - boundingRect.left > this.store.addTab.left
       ) {
         // TODO: Create a new window
       }

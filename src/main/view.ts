@@ -60,17 +60,16 @@ export class View {
       webPreferences: {
         preload: `${app.getAppPath()}/build/view-preload.bundle.js`,
         nodeIntegration: false,
-        contextIsolation: true,
-        sandbox: true,
-        enableRemoteModule: false,
+        contextIsolation: false,
+        sandbox: false,
         partition: incognito ? 'view_incognito' : 'persist:view',
         plugins: true,
-        nativeWindowOpen: true,
         webSecurity: true,
         javascript: true,
-        worldSafeExecuteJavaScript: false,
       },
     });
+
+    require('@electron/remote/main').enable(this.webContents);
 
     this.incognito = incognito;
 
@@ -91,6 +90,20 @@ export class View {
         callback({ requestHeaders: details.requestHeaders });
       },
     );
+
+    console.log(`[View] Created ${this.id} for ${url}`);
+
+    this.webContents.on('did-start-loading', () => {
+      console.log(`[View] ${this.id} started loading`);
+    });
+
+    this.webContents.on('did-finish-load', () => {
+      console.log(`[View] ${this.id} finished loading`);
+    });
+
+    this.webContents.on('did-fail-load', (e, errorCode, errorDescription, validatedURL) => {
+      console.error(`[View] ${this.id} failed to load ${validatedURL}: ${errorDescription} (${errorCode})`);
+    });
 
     ipcMain.handle(`get-error-url-${this.id}`, async (e) => {
       return this.errorURL;
@@ -167,32 +180,26 @@ export class View {
       },
     );
 
-    this.webContents.addListener(
-      'new-window',
-      (e, url, frameName, disposition) => {
-        if (disposition === 'new-window') {
-          if (frameName === '_self') {
-            e.preventDefault();
-            this.window.viewManager.selected.webContents.loadURL(url);
-          } else if (frameName === '_blank') {
-            e.preventDefault();
-            this.window.viewManager.create(
-              {
-                url,
-                active: true,
-              },
-              true,
-            );
-          }
-        } else if (disposition === 'foreground-tab') {
-          e.preventDefault();
-          this.window.viewManager.create({ url, active: true }, true);
-        } else if (disposition === 'background-tab') {
-          e.preventDefault();
-          this.window.viewManager.create({ url, active: false }, true);
+    this.webContents.setWindowOpenHandler(({ url, frameName, disposition }) => {
+      if (disposition === 'new-window') {
+        if (frameName === '_self') {
+          this.window.viewManager.selected.webContents.loadURL(url);
+        } else if (frameName === '_blank') {
+          this.window.viewManager.create(
+            {
+              url,
+              active: true,
+            },
+            true,
+          );
         }
-      },
-    );
+      } else if (disposition === 'foreground-tab') {
+        this.window.viewManager.create({ url, active: true }, true);
+      } else if (disposition === 'background-tab') {
+        this.window.viewManager.create({ url, active: false }, true);
+      }
+      return { action: 'deny' };
+    });
 
     this.webContents.addListener(
       'did-fail-load',

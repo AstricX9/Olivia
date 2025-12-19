@@ -9,7 +9,7 @@ import {
   ZOOM_FACTOR_MAX,
   ZOOM_FACTOR_INCREMENT,
 } from '~/constants/web-contents';
-import { extensions } from 'electron-extensions';
+// import { extensions } from 'electron-extensions';
 import { EventEmitter } from 'events';
 import { Application } from './application';
 
@@ -57,11 +57,8 @@ export class ViewManager extends EventEmitter {
     });
 
     ipcMain.handle(`view-select-${id}`, (e, id: number, focus: boolean) => {
-      if (process.env.ENABLE_EXTENSIONS) {
-        extensions.tabs.activate(id, focus);
-      } else {
-        this.select(id, focus);
-      }
+      console.log(`[IPC] Received view-select-${window.win.id} for view ${id}`);
+      this.select(id, focus);
     });
 
     ipcMain.on(`view-destroy-${id}`, (e, id: number) => {
@@ -88,6 +85,10 @@ export class ViewManager extends EventEmitter {
 
     ipcMain.on('reset-zoom', (e) => {
       this.resetZoom();
+    });
+
+    ipcMain.on(`resize-height-${id}`, () => {
+      this.fixBounds();
     });
 
     this.setBoundsListener();
@@ -147,13 +148,14 @@ export class ViewManager extends EventEmitter {
     this.views.set(id, view);
 
     if (process.env.ENABLE_EXTENSIONS) {
-      extensions.tabs.observe(webContents);
+      // extensions.tabs.observe(webContents);
     }
 
     webContents.once('destroyed', () => {
       this.views.delete(id);
     });
 
+    console.log(`[ViewManager] Created view ${view.id} for ${details.url}`);
     if (sendMessage) {
       this.window.send('create-tab', { ...details }, isNext, id);
     }
@@ -173,6 +175,7 @@ export class ViewManager extends EventEmitter {
       return;
     }
 
+    console.log(`[ViewManager] Selecting view ${id}`);
     this.selectedId = id;
 
     if (selected) {
@@ -207,10 +210,18 @@ export class ViewManager extends EventEmitter {
 
     const { width, height } = this.window.win.getContentBounds();
 
-    const toolbarContentHeight = await this.window.win.webContents
-      .executeJavaScript(`
-      document.getElementById('app').offsetHeight
-    `);
+    let toolbarContentHeight = 0;
+    try {
+      toolbarContentHeight = await this.window.win.webContents
+        .executeJavaScript(`
+        (document.getElementById('app') || { offsetHeight: ${VIEW_Y_OFFSET} }).offsetHeight
+      `);
+      console.log(`[ViewManager] Toolbar height: ${toolbarContentHeight}`);
+    } catch (e) {
+      console.error('[ViewManager] Error calculating toolbar height:', e);
+    }
+
+    if (toolbarContentHeight === 0) toolbarContentHeight = VIEW_Y_OFFSET;
 
     const newBounds = {
       x: 0,
@@ -219,29 +230,24 @@ export class ViewManager extends EventEmitter {
       height: this.fullscreen ? height : height - toolbarContentHeight,
     };
 
-    if (newBounds !== view.bounds) {
-      view.browserView.setBounds(newBounds);
-      view.bounds = newBounds;
-    }
+    console.log(`[ViewManager] Setting bounds for ${view.id}:`, newBounds);
+    view.browserView.setBounds(newBounds);
+    view.bounds = newBounds;
   }
 
   private setBoundsListener() {
     // resize the BrowserView's height when the toolbar height changes
     // ex: when the bookmarks bar appears
     this.window.webContents.executeJavaScript(`
-        const {ipcRenderer} = require('electron');
+        const { ipcRenderer } = require('electron');
         const resizeObserver = new ResizeObserver(([{ contentRect }]) => {
-          ipcRenderer.send('resize-height');
+          ipcRenderer.send(\`resize-height-${this.window.win.id}\`);
         });
         const app = document.getElementById('app');
-        resizeObserver.observe(app);
+        if (app) {
+          resizeObserver.observe(app);
+        }
       `);
-
-    this.window.webContents.on('ipc-message', (e, message) => {
-      if (message === 'resize-height') {
-        this.fixBounds();
-      }
-    });
   }
 
   public destroy(id: number) {

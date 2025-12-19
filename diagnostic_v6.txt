@@ -1,0 +1,13 @@
+
+
+DevTools listening on ws://127.0.0.1:9222/devtools/browser/577e0050-76df-4670-9a51-46a3265c7f15
+Checking for update
+[View] Created 6 for http://localhost:4444/newtab.html
+[View] 6 started loading
+[ViewManager] Created view 6 for http://localhost:4444/newtab.html
+[View] 6 finished loading
+Update for version 6.0.0-nightly.2 is not available (latest version: 5.2.0, downgrade is disallowed).
+[View] Created 7 for http://localhost:4444/settings.html
+[View] 7 started loading
+[ViewManager] Created view 7 for http://localhost:4444/settings.html
+[View] 7 finished loading

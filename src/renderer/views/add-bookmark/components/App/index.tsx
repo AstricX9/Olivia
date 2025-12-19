@@ -6,7 +6,8 @@ import { StyledApp, Title, Row, Label, Buttons } from './style';
 import store from '../../store';
 import { Input, Dropdown } from '~/renderer/components/Input';
 import { Button } from '~/renderer/components/Button';
-import { ipcRenderer, remote } from 'electron';
+import { ipcRenderer } from 'electron';
+import * as remote from '@electron/remote';
 import { getBookmarkTitle } from '~/renderer/views/bookmarks/utils';
 import { UIStyle } from '~/renderer/mixins/default-styles';
 
@@ -37,9 +38,9 @@ const onDropdownClick = (e: React.MouseEvent<HTMLDivElement>) => {
     })),
   ]);
 
-  const { x, y } = remote.BrowserView.fromWebContents(
-    remote.getCurrentWebContents(),
-  ).getBounds();
+  // In Electron 28, fromWebContents is removed.
+  // We'll use window bounds as a fallback for now.
+  const { x, y } = remote.getCurrentWindow().getContentBounds();
 
   menu.popup({ x: x + left, y: y + top + height });
 };

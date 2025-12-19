@@ -13,7 +13,7 @@ import {
 import { parseCrx } from '~/utils/crx';
 import { pathExists } from '~/utils/files';
 import { extractZip } from '~/utils/zip';
-import { extensions, _setFallbackSession } from 'electron-extensions';
+// import { extensions, _setFallbackSession } from 'electron-extensions';
 import { requestPermission } from './dialogs/permissions';
 import * as rimraf from 'rimraf';
 import { promisify } from 'util';
@@ -37,10 +37,12 @@ export class SessionsService {
     this.clearCache('incognito');
 
     if (process.env.ENABLE_EXTENSIONS) {
+/*
       extensions.initializeSession(
         this.view,
         `${app.getAppPath()}/build/extensions-preload.bundle.js`,
       );
+*/
 
       ipcMain.on('load-extensions', () => {
         this.loadExtensions();
@@ -380,7 +382,7 @@ export class SessionsService {
 
     ses.clearStorageData({
       storages: [
-        'appcache',
+
         'cookies',
         'filesystem',
         'indexdb',

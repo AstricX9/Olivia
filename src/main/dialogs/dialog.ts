@@ -50,11 +50,11 @@ export class PersistentDialog {
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,
-        enableRemoteModule: true,
-        worldSafeExecuteJavaScript: false,
         ...webPreferences,
       },
     });
+
+    require('@electron/remote/main').enable(this.browserView.webContents);
 
     this.bounds = { ...this.bounds, ...bounds };
     this.hideTimeout = hideTimeout;
@@ -106,7 +106,7 @@ export class PersistentDialog {
   }
 
   public show(browserWindow: BrowserWindow, focus = true, waitForLoad = true) {
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
       this.browserWindow = browserWindow;
 
       clearTimeout(this.timeout);
@@ -188,7 +188,7 @@ export class PersistentDialog {
   }
 
   public destroy() {
-    this.browserView.destroy();
+    (this.browserView.webContents as any).destroy();
     this.browserView = null;
   }
 }

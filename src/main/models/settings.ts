@@ -6,7 +6,7 @@ import { promises } from 'fs';
 
 import { getPath, makeId } from '~/utils';
 import { EventEmitter } from 'events';
-import { runAdblockService, stopAdblockService } from '../services/adblock';
+
 import { Application } from '../application';
 import { WEBUI_BASE_URL } from '~/constants/files';
 import { ISettings } from '~/interfaces';
@@ -28,9 +28,7 @@ export class Settings extends EventEmitter {
       },
     );
 
-    ipcMain.on('get-settings-sync', async (e) => {
-      await this.onLoad();
-      this.update();
+    ipcMain.on('get-settings-sync', (e) => {
       e.returnValue = this.object;
     });
 
@@ -99,18 +97,7 @@ export class Settings extends EventEmitter {
       });
     }
 
-    const contexts = [
-      Application.instance.sessions.view,
-      Application.instance.sessions.viewIncognito,
-    ];
 
-    contexts.forEach((e) => {
-      if (this.object.shield) {
-        runAdblockService(e);
-      } else {
-        stopAdblockService(e);
-      }
-    });
   };
 
   private async load() {
